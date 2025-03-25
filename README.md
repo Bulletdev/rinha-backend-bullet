@@ -82,8 +82,8 @@ O Nginx foi configurado para otimizar o balanceamento de carga e o gerenciamento
 
 1. Clone o repositório:
    ```bash
-   git clone [https://github.com/bulletdev/rinha-de-backend-java-loom.git]
-   cd [rinha-de-backend-java-loom]
+   git clone [https://github.com/bulletdev/rinha-de-backend-bullet.git]
+   cd [rinha-de-backend-bullet]
    ```
 
 2. Execute com Docker Compose:
