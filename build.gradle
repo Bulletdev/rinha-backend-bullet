@@ -1,0 +1,49 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+group = 'br.com.rinha'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+application {
+    mainClass = 'br.com.rinha.RinhaBackendApp'
+}
+
+dependencies {
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
+    implementation 'org.postgresql:postgresql:42.7.1'
+    implementation 'com.zaxxer:HikariCP:5.1.0'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.1'
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+    options.compilerArgs += ["--enable-preview"]
+}
+
+tasks.withType(Test) {
+    jvmArgs += ["--enable-preview"]
+}
+
+tasks.withType(JavaExec) {
+    jvmArgs += ["--enable-preview"]
+}
+
+shadowJar {
+    archiveBaseName.set('rinha-backend')
+    archiveClassifier.set('')
+    archiveVersion.set('')
+}
