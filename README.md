@@ -184,11 +184,7 @@ Se você encontrar o erro "Connection refused" entre os contêineres, verifique:
 
 - Michael Bullet
 - Contato@michaelbullet.com
-<<<<<<< HEAD
 - http://github.com/bulletdev
 - http://michaelbullet.com
-=======
-- http://hithub.com/bulletdev
-- http://michaelbullet.com
-```
+  ```
 >>>>>>> f1c1a8c9a324ce92e19e2b8119cc5f641c7f47f6
