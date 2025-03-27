@@ -51,7 +51,7 @@ O projeto utiliza Virtual Threads (Project Loom) do Java 21, que permite:
 - Melhor utilização dos recursos do sistema
 - Um thread por requisição sem bloquear threads do sistema operacional
 
-// Configuração do servidor para usar Virtual Threads
+// Configuração do servidor para usar Virtual Threads   
 ```java
 server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
 ```
@@ -187,4 +187,4 @@ Se você encontrar o erro "Connection refused" entre os contêineres, verifique:
 - http://github.com/bulletdev
 - http://michaelbullet.com
   ```
->>>>>>> f1c1a8c9a324ce92e19e2b8119cc5f641c7f47f6
+ 
