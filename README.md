@@ -101,12 +101,6 @@ O Nginx foi configurado para otimizar o balanceamento de carga e o gerenciamento
    git clone https://github.com/bulletdev/rinha-backend-bullet.git
    cd rinha-backend-bullet
    ```
-   
-=======
-```
-   git clone [https://github.com/bulletdev/rinha-backend-bullet.git]
-   cd [rinha-backend-bullet]
- ```
 
 2. Construa as imagens:
    
