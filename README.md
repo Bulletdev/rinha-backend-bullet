@@ -98,26 +98,28 @@ O Nginx foi configurado para otimizar o balanceamento de carga e o gerenciamento
 
 1. Clone o repositório:
    ```bash
-<<<<<<< HEAD
    git clone https://github.com/bulletdev/rinha-backend-bullet.git
    cd rinha-backend-bullet
+   ```
+   
 =======
+```
    git clone [https://github.com/bulletdev/rinha-backend-bullet.git]
    cd [rinha-backend-bullet]
->>>>>>> f1c1a8c9a324ce92e19e2b8119cc5f641c7f47f6
-   ```
+ ```
 
 2. Construa as imagens:
+   
    ```bash
    docker-compose build
    ```
 
-3. Execute com Docker Compose:
+4. Execute com Docker Compose:
    ```bash
    docker-compose up -d
    ```
 
-4. A API estará disponível na porta 9999:
+5. A API estará disponível na porta 9999:
    ```bash
    curl -X GET http://localhost:9999/clientes/1/extrato
    ```
@@ -182,7 +184,6 @@ Se você encontrar o erro "Connection refused" entre os contêineres, verifique:
 
 ## Autor
 
-- Michael Bullet
 - Contato@michaelbullet.com
 - http://github.com/bulletdev
 - http://michaelbullet.com
