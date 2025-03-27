@@ -14,7 +14,7 @@ echo "Executando build com Gradle..."
 
 # Construir a imagem Docker
 echo "Construindo a imagem Docker..."
-docker build -t rinha-backend-loom:latest -f docker/api/Dockerfile .
+docker build -t rinha-backend-bullet:latest -f docker/api/Dockerfile .
 
 echo "Imagem construída com sucesso!"
 echo "Para executar o projeto, utilize: docker-compose up -d"

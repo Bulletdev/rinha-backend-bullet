@@ -6,6 +6,7 @@ import com.sun.net.httpserver.HttpServer;
 import br.com.rinha.config.DatabaseConfig;
 import br.com.rinha.handler.ExtratoHandler;
 import br.com.rinha.handler.TransacaoHandler;
+import br.com.rinha.util.WarmupUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -21,7 +22,7 @@ import java.util.regex.Pattern;
 public class RinhaBackendApp {
     private static final Pattern TRANSACTION_PATH_PATTERN = Pattern.compile("/clientes/(\\d+)/transacoes");
     private static final Pattern EXTRACT_PATH_PATTERN = Pattern.compile("/clientes/(\\d+)/extrato");
-    private static final int PORT = 8080;
+    private static final int PORT = 9999;
 
     private static final TransacaoHandler transacaoHandler = new TransacaoHandler();
     private static final ExtratoHandler extratoHandler = new ExtratoHandler();
@@ -35,11 +36,18 @@ public class RinhaBackendApp {
         // Inicializar o pool de conexões
         DatabaseConfig.initConnectionPool();
 
+        // Realizar warmup da infraestrutura
+        System.out.println("Iniciando fase de warmup...");
+        WarmupUtil.performWarmup();
+
         // Criar servidor HTTP com um backlog maior para alta concorrência
         HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 10000);
 
         // Configurar rotas
         server.createContext("/", RinhaBackendApp::handleRequest);
+
+        // Adicionar endpoint de health check para facilitar monitoramento
+        server.createContext("/health", RinhaBackendApp::handleHealthCheck);
 
         // Usar virtual threads para processamento de requisições
         server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
@@ -88,6 +96,36 @@ public class RinhaBackendApp {
             sendResponse(exchange, 500, "Erro interno do servidor: " + e.getMessage());
         } finally {
             exchange.close();
+        }
+    }
+
+    /**
+     * Endpoint de health check para monitoramento
+     * @param exchange Objeto de troca HTTP
+     * @throws IOException em caso de erro de I/O
+     */
+    private static void handleHealthCheck(HttpExchange exchange) throws IOException {
+        try {
+            // Verificar se o banco de dados está acessível
+            boolean dbHealthy = false;
+            try (var conn = DatabaseConfig.getConnection()) {
+                try (var stmt = conn.prepareStatement("SELECT 1")) {
+                    try (var rs = stmt.executeQuery()) {
+                        dbHealthy = rs.next();
+                    }
+                }
+            } catch (Exception e) {
+                // Conexão com banco falhou
+                dbHealthy = false;
+            }
+
+            if (dbHealthy) {
+                sendResponse(exchange, 200, "OK");
+            } else {
+                sendResponse(exchange, 503, "Database connection failed");
+            }
+        } catch (Exception e) {
+            sendResponse(exchange, 500, "Health check failed: " + e.getMessage());
         }
     }
 

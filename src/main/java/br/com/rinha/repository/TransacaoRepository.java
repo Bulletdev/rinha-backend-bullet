@@ -12,9 +12,14 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Repositório para operações relacionadas a transações no banco de dados
+ * Otimizado para alta concorrência com suporte a salvamento assíncrono
  */
 public class TransacaoRepository {
     private static final String SQL_RECORD_TRANSACTION =
@@ -23,6 +28,37 @@ public class TransacaoRepository {
     private static final String SQL_GET_TRANSACTIONS =
             "SELECT valor, tipo, descricao, realizada_em FROM transacoes " +
                     "WHERE cliente_id = ? ORDER BY realizada_em DESC LIMIT 10";
+
+    // Fila para armazenar transações pendentes para salvamento assíncrono
+    private final ConcurrentLinkedQueue<Transacao> transactionQueue = new ConcurrentLinkedQueue<>();
+
+    // Executor para processamento assíncrono em batch
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
+
+    /**
+     * Construtor que inicia o processamento assíncrono de transações
+     */
+    public TransacaoRepository() {
+        // Processa a fila de transações a cada 100ms
+        scheduler.scheduleWithFixedDelay(this::processBatchTransactions, 100, 100, TimeUnit.MILLISECONDS);
+
+        // Registra shutdown hook para garantir que transações pendentes sejam processadas
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            scheduler.shutdown();
+            try {
+                // Aguarda até 5 segundos para processar transações pendentes
+                if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                    scheduler.shutdownNow();
+                }
+
+                // Processa manualmente quaisquer transações restantes
+                processBatchTransactions();
+            } catch (InterruptedException e) {
+                scheduler.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }));
+    }
 
     /**
      * Registra uma nova transação no banco de dados
@@ -37,6 +73,69 @@ public class TransacaoRepository {
             stmt.setString(3, transacao.getTipo());
             stmt.setString(4, transacao.getDescricao());
             stmt.executeUpdate();
+        }
+    }
+
+    /**
+     * Adiciona uma transação para salvamento assíncrono
+     * Este método retorna imediatamente sem bloquear
+     * @param transacao transação a ser salva assincronamente
+     */
+    public void saveAsync(Transacao transacao) {
+        transactionQueue.add(transacao);
+    }
+
+    /**
+     * Processa um lote de transações da fila
+     * Este método é chamado periodicamente pelo scheduler
+     */
+    private void processBatchTransactions() {
+        if (transactionQueue.isEmpty()) {
+            return;
+        }
+
+        List<Transacao> batch = new ArrayList<>();
+        // Coleta até 100 transações para processar em lote
+        for (int i = 0; i < 100 && !transactionQueue.isEmpty(); i++) {
+            Transacao transacao = transactionQueue.poll();
+            if (transacao != null) {
+                batch.add(transacao);
+            }
+        }
+
+        if (batch.isEmpty()) {
+            return;
+        }
+
+        // Processa o lote em uma única conexão
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_RECORD_TRANSACTION)) {
+                for (Transacao transacao : batch) {
+                    stmt.setInt(1, transacao.getClienteId());
+                    stmt.setInt(2, transacao.getValor());
+                    stmt.setString(3, transacao.getTipo());
+                    stmt.setString(4, transacao.getDescricao());
+                    stmt.addBatch();
+                }
+
+                stmt.executeBatch();
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                System.err.println("Erro ao processar lote de transações: " + e.getMessage());
+                e.printStackTrace();
+
+                // Recoloca as transações na fila para tentar novamente
+                transactionQueue.addAll(batch);
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro de conexão ao processar lote: " + e.getMessage());
+            e.printStackTrace();
+
+            // Recoloca as transações na fila para tentar novamente
+            transactionQueue.addAll(batch);
         }
     }
 
@@ -77,10 +176,10 @@ public class TransacaoRepository {
     }
 
     /**
-     * Executa uma transação de forma atômica usando uma única conexão
+     * Executa uma transação com uma conexão específica
      * @param connection Conexão com o banco de dados
      * @param clienteId ID do cliente
-     * @param tipo Tipo da transação ("c" para crédito, "d" para débito)
+     * @param tipo Tipo da transação
      * @param valor Valor da transação
      * @param descricao Descrição da transação
      * @throws SQLException em caso de erro no banco de dados

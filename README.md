@@ -6,6 +6,7 @@ Este projeto é uma implementação da Rinha de Backend 2024/Q1 utilizando Java 
 
 - **Java 21**: Utilizando recursos recentes como Virtual Threads (Project Loom)
 - **HTTP Server**: Servidor HTTP nativo do Java (com.sun.net.httpserver)
+- **HikariCP**: Pool de conexões de alto desempenho
 - **PostgreSQL**: Banco de dados relacional
 - **Docker e Docker Compose**: Para containerização
 - **Nginx**: Como load balancer
@@ -50,17 +51,31 @@ O projeto utiliza Virtual Threads (Project Loom) do Java 21, que permite:
 - Melhor utilização dos recursos do sistema
 - Um thread por requisição sem bloquear threads do sistema operacional
 
-```java
 // Configuração do servidor para usar Virtual Threads
-// server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
+```java
+server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
 ```
 
-### Otimizações do PostgreSQL
+### Otimizações do Banco de Dados
 
 O PostgreSQL foi configurado com parâmetros para otimizar o desempenho em alta concorrência:
 
 ```yaml
-command: postgres -c checkpoint_timeout=600 -c max_connections=100 -c shared_buffers=128MB -c synchronous_commit=off -c fsync=off
+command: postgres -c checkpoint_timeout=600 -c max_connections=200 -c shared_buffers=256MB 
+  -c synchronous_commit=off -c fsync=off -c work_mem=12MB -c maintenance_work_mem=128MB 
+  -c random_page_cost=1.1 -c effective_cache_size=300MB -c max_parallel_workers_per_gather=4 
+  -c max_parallel_workers=8 -c max_worker_processes=8
+```
+
+Além disso, utilizamos HikariCP para gerenciamento eficiente de conexões com o banco:
+
+// Configurações otimizadas para o pool de conexões
+
+```
+config.setMaximumPoolSize(20);
+config.setMinimumIdle(10);
+config.setConnectionTimeout(30000);
+config.addDataSourceProperty("cachePrepStmts", "true");
 ```
 
 ### Configurações do Nginx
@@ -69,7 +84,8 @@ O Nginx foi configurado para otimizar o balanceamento de carga e o gerenciamento
 
 - `worker_connections 2048`: Aumenta o número de conexões simultâneas
 - `keepalive 500`: Mantém conexões persistentes com os servidores API
-- Outros parâmetros para melhorar o desempenho (TCP tuning, buffer sizes, etc.)
+- `proxy_buffer_size` e `proxy_buffers`: Otimização de buffers
+- `tcp_nopush`, `tcp_nodelay`: Otimizações TCP
 
 ## Como Executar
 
@@ -82,16 +98,21 @@ O Nginx foi configurado para otimizar o balanceamento de carga e o gerenciamento
 
 1. Clone o repositório:
    ```bash
-   git clone [https://github.com/bulletdev/rinha-de-backend-java-loom.git]
-   cd [rinha-de-backend-java-loom]
+   git clone https://github.com/bulletdev/rinha-backend-bullet.git
+   cd rinha-backend-bullet
    ```
 
-2. Execute com Docker Compose:
+2. Construa as imagens:
+   ```bash
+   docker-compose build
+   ```
+
+3. Execute com Docker Compose:
    ```bash
    docker-compose up -d
    ```
 
-3. A API estará disponível na porta 9999:
+4. A API estará disponível na porta 9999:
    ```bash
    curl -X GET http://localhost:9999/clientes/1/extrato
    ```
@@ -100,20 +121,45 @@ O Nginx foi configurado para otimizar o balanceamento de carga e o gerenciamento
 
 ### 1. Criar Transação
 
-```
-POST /clientes/[id]/transacoes
-
-{
-    "valor": 1000,
-    "tipo": "c",
-    "descricao": "descricao"
-}
+No Windows (prompt de comando):
+```bash
+curl -X POST http://localhost:9999/clientes/1/transacoes -H "Content-Type: application/json" -d "{\"valor\": 1000, \"tipo\": \"c\", \"descricao\": \"salario\"}"
 ```
 
+No Linux/Mac:
+```bash
+
+curl -X POST http://localhost:9999/clientes/1/transacoes -H "Content-Type: application/json" -d '{"valor": 1000, "tipo": "c", "descricao": "salario"}'
+```
 ### 2. Consultar Extrato
 
+```bash
+curl -X GET http://localhost:9999/clientes/1/extrato
 ```
-GET /clientes/[id]/extrato
+
+## Testes de Carga
+
+O projeto inclui um script k6 para testes de carga:
+
+# Se tiver o k6 instalado:
+```bash
+# Se tiver o k6 instalado:
+k6 run k6/script.js
+```
+
+## Estrutura do Projeto
+
+O projeto segue uma arquitetura limpa e modular:
+
+```
+/src
+  /main
+    /java/br/com/rinha
+      /config      # Configurações (banco de dados, etc.)
+      /handler     # Manipuladores de requisições HTTP
+      /model       # Entidades do domínio
+      /repository  # Acesso a dados
+      /util        # Utilitários
 ```
 
 ## Limitações de Recursos
@@ -122,16 +168,16 @@ O projeto respeita as limitações de CPU e memória impostas pela Rinha de Back
 - Total CPU: 1.5 unidades (distribuídas entre os serviços)
 - Total Memória: 550MB (distribuída entre os serviços)
 
-## Melhorias Possíveis
+## Troubleshooting
 
-- Implementação de um pool de conexões mais robusto com HikariCP
-- Utilização de caching para reduzir a carga no banco de dados
-- Otimizações adicionais nas consultas SQL
+Se você encontrar o erro "Connection refused" entre os contêineres, verifique:
+1. Se os nomes dos serviços no docker-compose.yml correspondem aos utilizados na configuração
+2. Se todos os contêineres estão na mesma rede Docker
+3. Se o mapeamento de portas está correto (lembre-se que 9999:9999 é diferente de 9999:80)
 
 ## Autor
 
 - Michael Bullet
 - Contato@michaelbullet.com
-- http://hithub.com/bulletdev
+- http://github.com/bulletdev
 - http://michaelbullet.com
-```

@@ -1,4 +1,5 @@
-FROM eclipse-temurin:21-jdk AS build
+FROM azul/zulu-openjdk:21 AS build
+
 WORKDIR /app
 
 # Copy gradle configuration
