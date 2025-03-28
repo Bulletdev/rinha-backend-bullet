@@ -29,7 +29,7 @@ import java.util.Map;
 @Disabled
 public class ExtratosApiTest {
 
-    private final ExtratosApi api = new ExtratosApi();
+    private final org.openapitools.client.api.ExtratosApi api = new org.openapitools.client.api.ExtratosApi();
 
     /**
      * Obter extrato do cliente

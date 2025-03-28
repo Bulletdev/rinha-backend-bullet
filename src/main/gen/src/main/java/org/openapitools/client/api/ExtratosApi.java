@@ -13,18 +13,15 @@
 
 package org.openapitools.client.api;
 
+import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.reflect.TypeToken;
 import org.openapitools.client.ApiCallback;
 import org.openapitools.client.ApiClient;
 import org.openapitools.client.ApiException;
 import org.openapitools.client.ApiResponse;
 import org.openapitools.client.Configuration;
 import org.openapitools.client.Pair;
-import org.openapitools.client.ProgressRequestBody;
-import org.openapitools.client.ProgressResponseBody;
 
 import com.google.gson.reflect.TypeToken;
-
-import java.io.IOException;
 
 
 import org.openapitools.client.model.Extrato;
@@ -161,18 +158,18 @@ public class ExtratosApi {
 
     /**
      * Obter extrato do cliente
-     * Retorna o saldo atual e as últimas transações realizadas pelo cliente (até 10). As transações são ordenadas por data, da mais recente para a mais antiga. 
+     * Retorna o saldo atual e as últimas transações realizadas pelo cliente (até 10). As transações são ordenadas por data, da mais recente para a mais antiga.
+     *
      * @param id ID do cliente (required)
      * @return ApiResponse&lt;Extrato&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 200 </td><td> Extrato obtido com sucesso </td><td>  -  </td></tr>
-        <tr><td> 404 </td><td> Cliente não encontrado </td><td>  -  </td></tr>
-     </table>
+     * @http.response.details <table summary="Response Details" border="1">
+     * <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+     * <tr><td> 200 </td><td> Extrato obtido com sucesso </td><td>  -  </td></tr>
+     * <tr><td> 404 </td><td> Cliente não encontrado </td><td>  -  </td></tr>
+     * </table>
      */
-    public ApiResponse<Extrato> clientesIdExtratoGetWithHttpInfo(Integer id) throws ApiException {
+    public ApiResponse<T> clientesIdExtratoGetWithHttpInfo(Integer id) throws ApiException {
         okhttp3.Call localVarCall = clientesIdExtratoGetValidateBeforeCall(id, null);
         Type localVarReturnType = new TypeToken<Extrato>(){}.getType();
         return localVarApiClient.execute(localVarCall, localVarReturnType);

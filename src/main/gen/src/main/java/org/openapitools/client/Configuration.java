@@ -25,7 +25,7 @@ public class Configuration {
      *
      * @return Default API client
      */
-    public static ApiClient getDefaultApiClient() {
+    public static org.openapitools.client.ApiClient getDefaultApiClient() {
         return defaultApiClient;
     }
 
