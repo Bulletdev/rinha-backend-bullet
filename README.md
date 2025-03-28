@@ -1,3 +1,5 @@
+[![Build and Test](https://github.com/Bulletdev/rinha-backend-bullet/actions/workflows/build-and-test.yml/badge.svg?branch=master)](https://github.com/Bulletdev/rinha-backend-bullet/actions/workflows/build-and-test.yml)
+
 # Rinha de Backend Bullet - Java com Virtual Threads (Project Loom)
 
 Este projeto é uma implementação da Rinha de Backend 2024/Q1 utilizando Java 21 com Virtual Threads (Project Loom).
