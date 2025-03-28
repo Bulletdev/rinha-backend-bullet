@@ -76,7 +76,7 @@ jobs:
       run: |
         curl -f http://localhost:9999/clientes/1/extrato || {
           echo "API health check failed"
-          docker-compose logs
+          docker compose logs
           exit 1
         }
         
