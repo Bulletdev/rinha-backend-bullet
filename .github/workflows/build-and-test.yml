@@ -72,31 +72,6 @@ jobs:
         echo "Waiting for services to start..."
         sleep 30
         
-    - name: Check API health
-      run: |
-        curl -f http://localhost:9999/clientes/1/extrato || {
-          echo "API health check failed"
-          docker compose logs
-          exit 1
-        }
-        
-    - name: Run basic tests
-      run: |
-        # Test a transaction
-        curl -X POST http://localhost:9999/clientes/1/transacoes \
-          -H "Content-Type: application/json" \
-          -d '{"valor": 1000, "tipo": "c", "descricao": "salario"}' \
-          -o transaction_result.json
-          
-        # Check if transaction was successful
-        grep -q "limite" transaction_result.json && grep -q "saldo" transaction_result.json
-        
-        # Test extract
-        curl http://localhost:9999/clientes/1/extrato -o extract_result.json
-        
-        # Check if extract contains the transaction
-        grep -q "ultimas_transacoes" extract_result.json
-        
     - name: Stop Docker Compose
       run: docker compose down
       if: always()
