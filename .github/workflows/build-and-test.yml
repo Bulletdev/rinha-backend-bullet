@@ -97,7 +97,7 @@ jobs:
         path: build/libs/
         
     - name: Start Docker Compose
-      run: docker-compose up -d
+      run: docker compose up -d
       
     - name: Wait for services to start
       run: |
@@ -109,5 +109,5 @@ jobs:
         k6 run --vus 10 --duration 30s k6/script.js
         
     - name: Stop Docker Compose
-      run: docker-compose down
+      run: docker compose down
       if: always()
