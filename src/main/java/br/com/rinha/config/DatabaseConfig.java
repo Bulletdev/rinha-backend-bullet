@@ -38,7 +38,7 @@ public class DatabaseConfig {
         try {
             // Database configuration from environment variables with proper defaults
             String dbHost = System.getenv().getOrDefault("DB_HOSTNAME", "db");
-            String dbUrl = "localhost://" + dbHost + ":5432/rinha";
+            String dbUrl = "jdbc:postgresql://" + dbHost + ":5432/rinha";
             String dbUser = System.getenv().getOrDefault("DB_USER", "postgres");
             String dbPassword = System.getenv().getOrDefault("DB_PASSWORD", "P0rdemacia");
 
