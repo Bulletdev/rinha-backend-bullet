@@ -1,0 +1,216 @@
+openapi: 3.0.0
+info:
+  title: Rinha de Backend 2024/Q1 API
+  description: |
+    API para gerenciamento de transações financeiras e consulta de extratos.
+    Desenvolvida com Java 21 utilizando Project Loom (Virtual Threads) para alta concorrência.
+  version: 1.0.0
+  contact:
+    name: Michael Bullet
+    email: contato@michaelbullet.com
+    url: http://michaelbullet.com
+servers:
+  - url: http://localhost:9999
+    description: Servidor local através do Nginx (load balancer)
+  - url: http://localhost:8081
+    description: Servidor API 01 (acesso direto)
+  - url: http://localhost:8082
+    description: Servidor API 02 (acesso direto)
+tags:
+  - name: transacoes
+    description: Operações relacionadas a transações financeiras
+  - name: extratos
+    description: Operações relacionadas a extratos de clientes
+paths:
+  /clientes/{id}/transacoes:
+    post:
+      tags:
+        - transacoes
+      summary: Criar nova transação para um cliente
+      description: |
+        Cria uma nova transação para o cliente especificado. 
+        As transações podem ser de crédito (tipo "c") ou débito (tipo "d").
+        Transações de débito são limitadas pelo saldo + limite do cliente.
+      parameters:
+        - name: id
+          in: path
+          description: ID do cliente
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransacaoRequest'
+            examples:
+              credito:
+                summary: Exemplo de transação de crédito
+                value:
+                  valor: 1000
+                  tipo: "c"
+                  descricao: "salario"
+              debito:
+                summary: Exemplo de transação de débito
+                value:
+                  valor: 500
+                  tipo: "d"
+                  descricao: "aluguel"
+      responses:
+        '200':
+          description: Transação realizada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaldoLimite'
+              example:
+                limite: 100000
+                saldo: 9500
+        '404':
+          description: Cliente não encontrado
+        '422':
+          description: |
+            Transação inválida. Possíveis motivos:
+            * Saldo insuficiente para débito
+            * Campos fora das especificações (tipo incorreto, descrição muito longa, etc.)
+  /clientes/{id}/extrato:
+    get:
+      tags:
+        - extratos
+      summary: Obter extrato do cliente
+      description: |
+        Retorna o saldo atual e as últimas transações realizadas pelo cliente (até 10).
+        As transações são ordenadas por data, da mais recente para a mais antiga.
+      parameters:
+        - name: id
+          in: path
+          description: ID do cliente
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5
+            example: 1
+      responses:
+        '200':
+          description: Extrato obtido com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Extrato'
+        '404':
+          description: Cliente não encontrado
+  /health:
+    get:
+      summary: Verificar saúde da aplicação
+      description: Endpoint para verificação da saúde da aplicação e suas dependências
+      responses:
+        '200':
+          description: Aplicação saudável
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "OK"
+components:
+  schemas:
+    TransacaoRequest:
+      type: object
+      required:
+        - valor
+        - tipo
+        - descricao
+      properties:
+        valor:
+          type: integer
+          description: Valor da transação em centavos (número inteiro positivo)
+          minimum: 1
+          example: 1000
+        tipo:
+          type: string
+          description: Tipo da transação (c para crédito, d para débito)
+          enum: [c, d]
+          example: "c"
+        descricao:
+          type: string
+          description: Descrição da transação (entre 1 e 10 caracteres)
+          minLength: 1
+          maxLength: 10
+          example: "salario"
+    SaldoLimite:
+      type: object
+      required:
+        - limite
+        - saldo
+      properties:
+        limite:
+          type: integer
+          description: Limite do cliente em centavos
+          example: 100000
+        saldo:
+          type: integer
+          description: Saldo atual do cliente em centavos (pode ser negativo até o limite)
+          example: -500
+    Extrato:
+      type: object
+      required:
+        - saldo
+        - ultimas_transacoes
+      properties:
+        saldo:
+          $ref: '#/components/schemas/SaldoExtrato'
+        ultimas_transacoes:
+          type: array
+          description: Lista das últimas transações (máximo 10)
+          items:
+            $ref: '#/components/schemas/TransacaoExtrato'
+    SaldoExtrato:
+      type: object
+      required:
+        - total
+        - data_extrato
+        - limite
+      properties:
+        total:
+          type: integer
+          description: Saldo total do cliente em centavos
+          example: -500
+        data_extrato:
+          type: string
+          format: date-time
+          description: Data e hora da consulta do extrato
+          example: "2024-01-17T02:34:41.217753Z"
+        limite:
+          type: integer
+          description: Limite do cliente em centavos
+          example: 100000
+    TransacaoExtrato:
+      type: object
+      required:
+        - valor
+        - tipo
+        - descricao
+        - realizada_em
+      properties:
+        valor:
+          type: integer
+          description: Valor da transação em centavos
+          example: 1000
+        tipo:
+          type: string
+          description: Tipo da transação (c para crédito, d para débito)
+          enum: [c, d]
+          example: "c"
+        descricao:
+          type: string
+          description: Descrição da transação
+          example: "salario"
+        realizada_em:
+          type: string
+          format: date-time
+          description: Data e hora da realização da transação
+          example: "2024-01-17T02:34:38.543030Z"

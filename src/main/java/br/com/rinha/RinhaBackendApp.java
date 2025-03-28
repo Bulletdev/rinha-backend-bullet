@@ -4,6 +4,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
 import br.com.rinha.config.DatabaseConfig;
+import br.com.rinha.config.SwaggerConfig;
 import br.com.rinha.handler.ExtratoHandler;
 import br.com.rinha.handler.TransacaoHandler;
 import br.com.rinha.util.WarmupUtil;
@@ -22,7 +23,7 @@ import java.util.regex.Pattern;
 public class RinhaBackendApp {
     private static final Pattern TRANSACTION_PATH_PATTERN = Pattern.compile("/clientes/(\\d+)/transacoes");
     private static final Pattern EXTRACT_PATH_PATTERN = Pattern.compile("/clientes/(\\d+)/extrato");
-    private static final int PORT = 9999;
+    private static final int PORT = 8080;
 
     private static final TransacaoHandler transacaoHandler = new TransacaoHandler();
     private static final ExtratoHandler extratoHandler = new ExtratoHandler();
@@ -43,11 +44,14 @@ public class RinhaBackendApp {
         // Criar servidor HTTP com um backlog maior para alta concorrência
         HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 10000);
 
-        // Configurar rotas
+        // Configurar rotas da API
         server.createContext("/", RinhaBackendApp::handleRequest);
 
         // Adicionar endpoint de health check para facilitar monitoramento
         server.createContext("/health", RinhaBackendApp::handleHealthCheck);
+
+        // Configurar endpoints do Swagger
+        SwaggerConfig.registerSwaggerEndpoints(server);
 
         // Usar virtual threads para processamento de requisições
         server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
@@ -58,6 +62,7 @@ public class RinhaBackendApp {
         // Iniciar o servidor
         server.start();
         System.out.println("Servidor iniciado na porta " + PORT + " usando virtual threads");
+        System.out.println("Documentação Swagger disponível em: http://localhost:" + PORT + "/swagger");
     }
 
     /**
@@ -86,8 +91,10 @@ public class RinhaBackendApp {
                 return;
             }
 
-            // Tratar 404 Not Found
-            sendResponse(exchange, 404, "Rota não encontrada");
+            // Tratar 404 Not Found para rotas não reconhecidas
+            if (!path.startsWith("/swagger") && !path.equals("/api-docs") && !path.equals("/health")) {
+                sendResponse(exchange, 404, "Rota não encontrada");
+            }
         } catch (NumberFormatException e) {
             // ID de cliente inválido
             sendResponse(exchange, 404, "ID de cliente inválido");
@@ -95,7 +102,10 @@ public class RinhaBackendApp {
             e.printStackTrace();
             sendResponse(exchange, 500, "Erro interno do servidor: " + e.getMessage());
         } finally {
-            exchange.close();
+            // Não fechar o exchange aqui se a rota for para Swagger
+            if (!path.startsWith("/swagger") && !path.equals("/api-docs")) {
+                exchange.close();
+            }
         }
     }
 
