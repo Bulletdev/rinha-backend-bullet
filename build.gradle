@@ -8,7 +8,8 @@ group = 'br.com.rinha'
 version = '1.0.0'
 
 repositories {
-    mavenCentral()       mavenlocal()
+    mavenCentral()       
+    mavenlocal()
 
 }
 
@@ -32,8 +33,6 @@ dependencies {
     implementation 'org.testng:testng:7.1.0'// Implementação do Logback
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.1'
-    implementation "org.openapitools:openapi-java-client:1.0.0"
-
 }
 
 tasks.withType(JavaCompile).configureEach {
