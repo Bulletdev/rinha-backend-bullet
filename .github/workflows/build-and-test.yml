@@ -33,7 +33,7 @@ jobs:
       run: ./gradlew shadowJar
       
     - name: Upload JAR
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: rinha-backend-jar
         path: build/libs/rinha-backend.jar
@@ -44,7 +44,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       
     - name: Download JAR
       uses: actions/download-artifact@v3
@@ -53,7 +53,7 @@ jobs:
         path: build/libs/
         
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      uses: docker/setup-buildx-action@v3
       
     - name: Build Docker image
       uses: docker/build-push-action@v4
