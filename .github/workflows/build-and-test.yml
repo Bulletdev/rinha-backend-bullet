@@ -1,53 +1,138 @@
- plugins {
-    id 'java'
-    id 'application'
-    id("com.gradleup.shadow") version "9.0.0-beta12"
-}
+name: Build and Test
 
-group = 'br.com.rinha'
-version = '1.0.0'
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+    # Permite executar o workflow manualmente
 
-repositories {
-    mavenCentral()
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
-}
-
-application {
-    mainClass = 'br.com.rinha.RinhaBackendApp'
-}
-
-dependencies {
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
-    implementation 'org.postgresql:postgresql:42.7.1'
-    implementation 'com.zaxxer:HikariCP:5.1.0'
+jobs:
+  build:
+    runs-on: ubuntu-latest
     
-    // SLF4J implementação para resolver os avisos
-    implementation 'org.slf4j:slf4j-api:2.0.9'
-    implementation 'org.slf4j:slf4j-simple:2.0.9'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Set up JDK 21
+      uses: actions/setup-java@v3
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: gradle
+        
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+      
+    - name: Build with Gradle
+      run: ./gradlew build
+
+    - name: Build JAR
+      run: ./gradlew shadowJar
+      
+    - name: Upload JAR
+      uses: actions/upload-artifact@v3
+      with:
+        name: rinha-backend-jar
+        path: build/libs/rinha-backend.jar
+        
+  docker:
+    needs: build
+    runs-on: ubuntu-latest
     
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.1'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.1'
-}
-
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
-    options.compilerArgs += ["--enable-preview"]
-}
-
-tasks.withType(Test) {
-    jvmArgs += ["--enable-preview"]
-}
-
-tasks.withType(JavaExec) {
-    jvmArgs += ["--enable-preview"]
-}
-
-shadowJar {
-    archiveBaseName.set('rinha-backend')
-    archiveClassifier.set('')
-    archiveVersion.set('')
-}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Download JAR
+      uses: actions/download-artifact@v3
+      with:
+        name: rinha-backend-jar
+        path: build/libs/
+        
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+      
+    - name: Build Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        file: docker/api/Dockerfile
+        push: false
+        tags: rinha-backend-bullet:latest
+        load: true
+        
+    - name: Start Docker Compose
+      run: docker-compose up -d
+      
+    - name: Wait for services to start
+      run: |
+        echo "Waiting for services to start..."
+        sleep 30
+        
+    - name: Check API health
+      run: |
+        curl -f http://localhost:9999/clientes/1/extrato || {
+          echo "API health check failed"
+          docker-compose logs
+          exit 1
+        }
+        
+    - name: Run basic tests
+      run: |
+        # Test a transaction
+        curl -X POST http://localhost:9999/clientes/1/transacoes \
+          -H "Content-Type: application/json" \
+          -d '{"valor": 1000, "tipo": "c", "descricao": "salario"}' \
+          -o transaction_result.json
+          
+        # Check if transaction was successful
+        grep -q "limite" transaction_result.json && grep -q "saldo" transaction_result.json
+        
+        # Test extract
+        curl http://localhost:9999/clientes/1/extrato -o extract_result.json
+        
+        # Check if extract contains the transaction
+        grep -q "ultimas_transacoes" extract_result.json
+        
+    - name: Stop Docker Compose
+      run: docker-compose down
+      if: always()
+      
+  performance-test:
+    needs: docker
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Install k6
+      run: |
+        curl -L https://github.com/grafana/k6/releases/download/v0.45.0/k6-v0.45.0-linux-amd64.tar.gz -o k6.tar.gz
+        tar -xzf k6.tar.gz
+        sudo cp k6-v0.45.0-linux-amd64/k6 /usr/local/bin
+        
+    - name: Download JAR
+      uses: actions/download-artifact@v3
+      with:
+        name: rinha-backend-jar
+        path: build/libs/
+        
+    - name: Start Docker Compose
+      run: docker-compose up -d
+      
+    - name: Wait for services to start
+      run: |
+        echo "Waiting for services to start..."
+        sleep 30
+        
+    - name: Run k6 performance test
+      run: |
+        k6 run --vus 10 --duration 30s k6/script.js
+        
+    - name: Stop Docker Compose
+      run: docker-compose down
+      if: always()
