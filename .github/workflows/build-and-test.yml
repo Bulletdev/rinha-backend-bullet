@@ -1,113 +1,54 @@
-name: Build and Test
+plugins {
+    id 'java'
+    id 'application'
+    id("com.gradleup.shadow") version "9.0.0-beta12"
+}
 
-on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-  workflow_dispatch:
-    # Permite executar o workflow manualmente
+group = 'br.com.rinha'
+version = '1.0.0'
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Set up JDK 21
-      uses: actions/setup-java@v4
-      with:
-        java-version: '21'
-        distribution: 'temurin'
-        cache: gradle
-        
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-      
-    - name: Build with Gradle
-      run: ./gradlew --warning-mode=all build 
+repositories {
+    mavenCentral()
+    maven { url 'https://maven.google.com' } // Add this line
+}
 
-    - name: Build JAR
-      run: ./gradlew shadowJar
-      
-    - name: Upload JAR
-      uses: actions/upload-artifact@v4
-      with:
-        name: rinha-backend-jar
-        path: build/libs/rinha-backend.jar
-        
-  docker:
-    needs: build
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Download JAR
-      uses: actions/download-artifact@v4
-      with:
-        name: rinha-backend-jar
-        path: build/libs/
-        
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-      
-    - name: Build Docker image
-      uses: docker/build-push-action@v4
-      with:
-        context: .
-        file: docker/api/Dockerfile
-        push: false
-        tags: rinha-backend-bullet:latest
-        load: true
-        
-    - name: Start Docker Compose
-      run: docker compose up -d
-      
-    - name: Wait for services to start
-      run: |
-        echo "Waiting for services to start..."
-        sleep 30
-        
-    - name: Stop Docker Compose
-      run: docker compose down
-      if: always()
-      
-  performance-test:
-    needs: docker
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Install k6
-      run: |
-        curl -L https://github.com/grafana/k6/releases/download/v0.45.0/k6-v0.45.0-linux-amd64.tar.gz -o k6.tar.gz
-        tar -xzf k6.tar.gz
-        sudo cp k6-v0.45.0-linux-amd64/k6 /usr/local/bin
-        
-    - name: Download JAR
-      uses: actions/download-artifact@v4
-      with:
-        name: rinha-backend-jar
-        path: build/libs/
-        
-    - name: Start Docker Compose
-      run: docker compose up -d
-      
-    - name: Wait for services to start
-      run: |
-        echo "Waiting for services to start..."
-        sleep 30
-        
-    - name: Run k6 performance test
-      run: |
-        k6 run --vus 10 --duration 30s k6/script.js
-        
-    - name: Stop Docker Compose
-      run: docker compose down
-      if: always()
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+application {
+    mainClass = 'br.com.rinha.RinhaBackendApp'
+}
+
+dependencies {
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
+    implementation 'org.postgresql:postgresql:42.7.2'
+    implementation 'com.zaxxer:HikariCP:5.1.0'
+    implementation 'org.slf4j:slf4j-api:2.0.0-alpha1'
+    implementation 'ch.qos.logback:logback-classic:1.4.12'
+    implementation 'com.google.firebase:firebase-crashlytics-buildtools:3.0.3'
+    implementation 'org.junit.jupiter:junit-jupiter:5.8.1'
+    implementation 'org.testng:testng:7.1.0' // Implementação do Logback
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.1'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.compilerArgs += ["--enable-preview"]
+}
+
+tasks.withType(Test).configureEach {
+    jvmArgs += ["--enable-preview"]
+}
+
+tasks.withType(JavaExec).configureEach {
+    jvmArgs += ["--enable-preview"]
+}
+
+shadowJar {
+    archiveBaseName.set('rinha-backend')
+    archiveClassifier.set('')
+    archiveVersion.set('')
+}
