@@ -5,7 +5,7 @@
 # Rinha de Backend Bullet - Java com Virtual Threads (Project Loom) 
 
 Este projeto é uma implementação da Rinha de Backend 2024/Q1 utilizando Java 21 com Virtual Threads (Project Loom).
-
+ 
 ## Tecnologias Utilizadas
 
 - **Java 21**: Utilizando recursos recentes como Virtual Threads (Project Loom)
