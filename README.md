@@ -8,7 +8,7 @@ Este projeto é uma implementação da Rinha de Backend 2024/Q1 utilizando Java 
  
 ## Tecnologias Utilizadas
 
-- **Java 21**: Utilizando recursos recentes como Virtual Threads (Project Loom)
+- **Java 21**: Utilizando recursos recentes como Virtual Threads (Project Loom) 
 - **HTTP Server**: Servidor HTTP nativo do Java (com.sun.net.httpserver)
 - **HikariCP**: Pool de conexões de alto desempenho
 - **PostgreSQL**: Banco de dados relacional 
