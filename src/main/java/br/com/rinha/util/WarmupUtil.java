@@ -142,17 +142,14 @@ public class WarmupUtil {
             try {
                 JsonUtil.getObjectMapper().readTree(jsonStr);
             } catch (Exception e) {
-                // Ignora erros durante o warmup
             }
 
-            // Cria objetos JSON de resposta
             ObjectNode node = JsonUtil.getObjectMapper().createObjectNode();
             node.put("limite", 100000);
             node.put("saldo", i);
             try {
                 JsonUtil.getObjectMapper().writeValueAsString(node);
             } catch (Exception e) {
-                // Ignora erros durante o warmup
             }
         }
 
