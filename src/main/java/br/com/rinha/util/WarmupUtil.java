@@ -134,7 +134,6 @@ public class WarmupUtil {
     private static void warmupJIT() {
         System.out.println("Aquecendo JIT compilador...");
 
-        // Simula operações de JSON para aquecer o parser
         for (int i = 0; i < 1000; i++) {
             String jsonStr = "{\"valor\": " + i + ", \"tipo\": \"" +
                     (i % 2 == 0 ? "c" : "d") +
