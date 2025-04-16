@@ -6,7 +6,7 @@
  
 Este projeto é uma implementação da Rinha de Backend 2024/Q1 utilizando Java 21 com Virtual Threads (Project Loom).
  
-## Tecnologias Utilizadas
+## Tecnologias Utilizadas 
 
 - **Java 21**: Utilizando recursos recentes como Virtual Threads (Project Loom) 
 - **HTTP Server**: Servidor HTTP nativo do Java (com.sun.net.httpserver)
