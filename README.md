@@ -1,17 +1,17 @@
 [![Build and Test](https://github.com/Bulletdev/rinha-backend-bullet/actions/workflows/build-and-test.yml/badge.svg?branch=master)](https://github.com/Bulletdev/rinha-backend-bullet/actions/workflows/build-and-test.yml)
-[![K6](https://img.shields.io/badge/K6%20Test-Passing-green)](https://bulletdev.grafana.net/a/k6-app/runs/4225718?tab=thresholds)
+[![K6](https://img.shields.io/badge/K6%20Test-Passing-green)](https://bulletdev.grafana.net/a/k6-app/runs/4225718?tab=thresholds)  
 
 
-# Rinha de Backend Bullet - Java com Virtual Threads (Project Loom)
-
+# Rinha de Backend Bullet - Java com Virtual Threads (Project Loom) 
+ 
 Este projeto é uma implementação da Rinha de Backend 2024/Q1 utilizando Java 21 com Virtual Threads (Project Loom).
+ 
+## Tecnologias Utilizadas 
 
-## Tecnologias Utilizadas
-
-- **Java 21**: Utilizando recursos recentes como Virtual Threads (Project Loom)
+- **Java 21**: Utilizando recursos recentes como Virtual Threads (Project Loom) 
 - **HTTP Server**: Servidor HTTP nativo do Java (com.sun.net.httpserver)
 - **HikariCP**: Pool de conexões de alto desempenho
-- **PostgreSQL**: Banco de dados relacional
+- **PostgreSQL**: Banco de dados relacional 
 - **Docker e Docker Compose**: Para containerização
 - **Nginx**: Como load balancer
 
