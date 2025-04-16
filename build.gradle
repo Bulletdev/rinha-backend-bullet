@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id 'application'
-    id("com.gradleup.shadow") version "9.0.0-beta12"
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 group = 'br.com.rinha'
@@ -9,7 +9,6 @@ version = '1.0.0'
 
 repositories {
     mavenCentral()
-    google()
 }
 
 java {
@@ -26,12 +25,10 @@ dependencies {
     implementation 'org.postgresql:postgresql:42.7.2'
     implementation 'com.zaxxer:HikariCP:5.1.0'
     implementation 'org.slf4j:slf4j-api:2.0.0-alpha1'
-    implementation 'ch.qos.logback:logback-classic:1.4.12'
-    implementation 'com.google.firebase:firebase-crashlytics-buildtools:3.0.3'
-    implementation 'org.junit.jupiter:junit-jupiter:5.8.1'
-    implementation 'org.testng:testng:7.1.0'// Implementação do Logback
+    implementation 'ch.qos.logback:logback-classic:1.4.12' // Implementação do Logback
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.1'
+
 }
 
 tasks.withType(JavaCompile).configureEach {

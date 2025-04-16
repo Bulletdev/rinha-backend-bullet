@@ -134,6 +134,7 @@ public class WarmupUtil {
     private static void warmupJIT() {
         System.out.println("Aquecendo JIT compilador...");
 
+        // Simula operações de JSON para aquecer o parser
         for (int i = 0; i < 1000; i++) {
             String jsonStr = "{\"valor\": " + i + ", \"tipo\": \"" +
                     (i % 2 == 0 ? "c" : "d") +
@@ -141,14 +142,17 @@ public class WarmupUtil {
             try {
                 JsonUtil.getObjectMapper().readTree(jsonStr);
             } catch (Exception e) {
+                // Ignora erros durante o warmup
             }
 
+            // Cria objetos JSON de resposta
             ObjectNode node = JsonUtil.getObjectMapper().createObjectNode();
             node.put("limite", 100000);
             node.put("saldo", i);
             try {
                 JsonUtil.getObjectMapper().writeValueAsString(node);
             } catch (Exception e) {
+                // Ignora erros durante o warmup
             }
         }
 
