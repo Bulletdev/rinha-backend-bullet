@@ -1,4 +1,4 @@
-[![Build and Test](https://github.com/Bulletdev/rinha-backend-bullet/actions/workflows/build-and-test.yml/badge.svg?branch=master)](https://github.com/Bulletdev/rinha-backend-bullet/actions/workflows/build-and-test.yml)
+[![Build and Test](https://github.com/Bulletdev/rinha-backend-bullet/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/Bulletdev/rinha-backend-bullet/actions/workflows/build-and-test.yml)
 [![K6](https://img.shields.io/badge/K6%20Test-Passing-green)](https://bulletdev.grafana.net/a/k6-app/runs/4225718?tab=thresholds)
 
 
